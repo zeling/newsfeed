@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import AssemblyKeys._
 
 val akkaVersion = "2.4.0"
 
@@ -42,4 +43,6 @@ val project = Project(
             testResults.summaries ++ multiNodeResults.summaries)
     }
   )
-) configs (MultiJvm)
+) configs MultiJvm
+
+assemblySettings

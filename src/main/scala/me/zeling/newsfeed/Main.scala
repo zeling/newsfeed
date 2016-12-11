@@ -20,8 +20,8 @@ object Main extends App {
   // Create an Akka system
   implicit val system = ActorSystem(config.getString("akka.cluster.name"), config)
 
-  startupSharedJournal(system, startStore = config.getBoolean("application.start-shared-leveldb"), path =
-    ActorPath.fromString(s"akka.tcp://${config.getString("akka.cluster.name")}@127.0.0.1:2551/user/store"))
+  startupSharedJournal(system, startStore = config.getBoolean("application.leveldb.start-shared-leveldb"), path =
+    ActorPath.fromString(config.getString("application.leveldb.actor-path")))
 
   ClusterSharding(system).start(
     typeName = Post.shardName,
@@ -51,11 +51,11 @@ object Main extends App {
   def startupSharedJournal(system: ActorSystem, startStore: Boolean, path: ActorPath): Unit = {
 
     if (startStore)
-      system.actorOf(Props[SharedLeveldbStore], "store")
+      system.actorOf(Props[SharedLeveldbStore], config.getString("application.leveldb.shared-name"))
 
     import system.dispatcher
     implicit val timeout = Timeout(15.seconds)
-    val f = (system.actorSelection(path) ? Identify(None))
+    val f = system.actorSelection(path) ? Identify(None)
     f.onSuccess {
       case ActorIdentity(_, Some(ref)) => SharedLeveldbJournal.setStore(ref, system)
       case _ =>
