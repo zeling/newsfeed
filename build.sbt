@@ -23,12 +23,13 @@ val project = Project(
       "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
       "org.scalatest" %% "scalatest" % "2.1.6" % "test",
       "commons-io" % "commons-io" % "2.4" % "test"),
-    // make sure that MultiJvm test are compiled by the default test compilation
+
+    mainClass in (Compile, packageBin) := Some("me.zeling.newsfeed.Main"),
+
     compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
-    // disable parallel tests
+
     parallelExecution in Test := false,
-    // make sure that MultiJvm tests are executed by the default test target, 
-    // and combine the results from ordinary test and multi-jvm tests
+
     executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
       case (testResults, multiNodeResults)  =>
         val overall =

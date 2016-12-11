@@ -7,6 +7,7 @@ import akka.actor.{ActorLogging, ActorRef}
 import akka.cluster.sharding.{ClusterSharding, ShardRegion}
 import akka.persistence.PersistentActor
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Future
 
@@ -100,6 +101,9 @@ class User extends PersistentActor with ActorLogging with HasPostRegion with Has
   var userState = State.initial
   val shard = ClusterSharding(context.system)
 
+  val config = ConfigFactory.load()
+  val resourceAddr = s"http://${config.getString("application.resource.ip")}:${config.getString("application.resource.port")}"
+
   override def receiveRecover: Receive = {
     case event: Event => {
       userState = userState.updated(event)
@@ -192,8 +196,8 @@ class User extends PersistentActor with ActorLogging with HasPostRegion with Has
     Future.sequence(postIds.map(transform).map(ask(whomToAsk, _).mapTo[Post.PostView]))//.map(_.sorted)
   }
 
-  def portraitUrl = "http://0.0.0.0:8080/user/" + userState.username + "/portrait/" + userState.portraitVer
-  def headerUrl = "http://0.0.0.0:8080/user/" + userState.username + "/header/" + userState.headerVer
+  def portraitUrl = s"${resourceAddr}/user/${userState.username}/portrait/${userState.portraitVer}"
+  def headerUrl = s"${resourceAddr}/user/${userState.username}/header/${userState.headerVer}"
 
   override def persistenceId: String = "user@" + self.path.parent.name + "-" + self.path.name
 }
